@@ -32,9 +32,10 @@ jobs:
     - name: Build
       # Build your program with the given configuration
       run: |
-        export CC=${{env.EMSDK}}/upstream/bin/emcc
-        export CXX=${{env.EMSDK}}/upstream/bin/em++
-        emcmake cmake -B build
+        #export CC=${{env.EMSDK}}/upstream/bin/emcc
+        #export CXX=${{env.EMSDK}}/upstream/bin/em++
+        #emcmake cmake -B build 
+        emcmake cmake -B build -DCMAKE_CXX_COMPILER=${{env.EMSDK}}/upstream/bin/em++ -DCMAKE_C_COMPILER=${{env.EMSDK}}/upstream/bin/emcc
         cd build
         emmake make
     - uses: actions/upload-artifact@v3
