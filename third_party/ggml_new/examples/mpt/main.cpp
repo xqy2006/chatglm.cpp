@@ -188,7 +188,7 @@ bool mpt_model_load(const std::string & fname, mpt_model & model, gpt_vocab & vo
     {
         uint32_t magic;
         fin.read((char *)&magic, sizeof(magic));
-        if (magic != GGML_FILE_MAGIC) {
+        if (magic != 0x67676d6c) {
             fprintf(stderr, "%s: invalid model file '%s' (bad magic)\n", __func__, fname.c_str());
             return false;
         }
@@ -499,6 +499,7 @@ bool mpt_eval(const mpt_model & model, const int n_threads, const int n_past,
 
     struct ggml_context * ctx0 = ggml_init(params);
     struct ggml_cgraph gf = {};
+    gf.n_threads = n_threads;
 
     struct ggml_tensor * embd = ggml_new_tensor_1d(ctx0, GGML_TYPE_I32, N);
     memcpy(embd->data, embd_inp.data(), N * ggml_element_size(embd));
@@ -650,7 +651,7 @@ bool mpt_eval(const mpt_model & model, const int n_threads, const int n_past,
 
     // run the computation
     ggml_build_forward_expand(&gf, inpL);
-    ggml_graph_compute_with_ctx(ctx0, &gf, n_threads);
+    ggml_graph_compute(ctx0, &gf);
 
     // std::cout << "Qcur" << std::endl;
     // print_tensor(Qcur);

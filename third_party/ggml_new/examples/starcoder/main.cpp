@@ -86,7 +86,7 @@ bool starcoder_model_load(const std::string & fname, starcoder_model & model, gp
     {
         uint32_t magic;
         fin.read((char *) &magic, sizeof(magic));
-        if (magic != GGML_FILE_MAGIC) {
+        if (magic != 0x67676d6c) {
             fprintf(stderr, "%s: invalid model file '%s' (bad magic)\n", __func__, fname.c_str());
             return false;
         }
@@ -153,8 +153,7 @@ bool starcoder_model_load(const std::string & fname, starcoder_model & model, gp
                 "<fim-prefix>",
                 "<fim-middle>",
                 "<fim-suffix>",
-                "<fim-pad>",
-                "<|end_of_turn|>"
+                "<fim-pad>"
             }) {
             if (vocab.token_to_id.find(token) != vocab.token_to_id.end()) {
                 vocab.add_special_token(token);
@@ -464,6 +463,7 @@ bool starcoder_eval(
 
     struct ggml_context * ctx0 = ggml_init(params);
     struct ggml_cgraph gf = {};
+    gf.n_threads = n_threads;
 
     struct ggml_tensor * embd = ggml_new_tensor_1d(ctx0, GGML_TYPE_I32, N);
     memcpy(embd->data, embd_inp.data(), N*ggml_element_size(embd));
@@ -716,7 +716,7 @@ bool starcoder_eval(
 
     // run the computation
     ggml_build_forward_expand(&gf, inpL);
-    ggml_graph_compute_with_ctx(ctx0, &gf, n_threads);
+    ggml_graph_compute       (ctx0, &gf);
 
     //if (n_past%100 == 0) {
     //    ggml_graph_print   (&gf);
@@ -782,25 +782,12 @@ int main(int argc, char ** argv) {
         test_gpt_tokenizer(vocab, params.token_test);
     }
 
-    if (params.repeat_last_n == -1) {
-        params.repeat_last_n = model.hparams.n_ctx;
-    }
-    printf("\n");
-    printf("%s: temp           = %.3f\n", __func__, params.temp);
-    printf("%s: top_k          = %d\n",   __func__, params.top_k);
-    printf("%s: top_p          = %.3f\n", __func__, params.top_p);
-    printf("%s: repeat_last_n  = %d\n",   __func__, params.repeat_last_n);
-    printf("%s: repeat_penalty = %.3f\n", __func__, params.repeat_penalty);
-
     int n_past = 0;
 
     int64_t t_sample_us  = 0;
     int64_t t_predict_us = 0;
 
     std::vector<float> logits;
-
-    std::vector<int32_t> last_n_tokens(model.hparams.n_ctx);
-    std::fill(last_n_tokens.begin(), last_n_tokens.end(), 0);
 
     // tokenize the prompt
     std::vector<gpt_vocab::id> embd_inp = ::gpt_tokenize(vocab, params.prompt);
@@ -814,17 +801,12 @@ int main(int argc, char ** argv) {
     }
     printf("\n\n");
 
-    // Handle StarChat "<|end|>" and OpenCoder "<|end_of_turn>" tokens.
+    // Handle StarChat "<|end|>" token.
     gpt_vocab::id starchat_end_token = -1;
     {
         const auto it = vocab.token_to_id.find("<|end|>");
         if (it != vocab.token_to_id.end()) {
             starchat_end_token = it->second;
-        } else {
-            const auto eot_token_id = vocab.token_to_id.find("<|end_of_turn|>");
-            if (eot_token_id != vocab.token_to_id.end()) {
-              starchat_end_token = eot_token_id->second;
-            }
         }
     }
 
@@ -865,23 +847,17 @@ int main(int argc, char ** argv) {
             {
                 const int64_t t_start_sample_us = ggml_time_us();
 
-                id = gpt_sample_top_k_top_p_repeat(vocab, logits.data() + (logits.size() - n_vocab), last_n_tokens.data(), last_n_tokens.size(), top_k, top_p, temp, params.repeat_last_n, params.repeat_penalty, rng);
+                id = gpt_sample_top_k_top_p(vocab, logits.data() + (logits.size() - n_vocab), top_k, top_p, temp, rng);
+
                 t_sample_us += ggml_time_us() - t_start_sample_us;
             }
 
             // add it to the context
             embd.push_back(id);
-
-            last_n_tokens.erase(last_n_tokens.begin());
-            last_n_tokens.push_back(id);
         } else {
             // if here, it means we are still processing the input prompt
             for (int k = i; k < embd_inp.size(); k++) {
                 embd.push_back(embd_inp[k]);
-
-                last_n_tokens.erase(last_n_tokens.begin());
-                last_n_tokens.push_back(embd_inp[k]);
-
                 if (embd.size() >= params.n_batch) {
                     break;
                 }
@@ -904,7 +880,7 @@ int main(int argc, char ** argv) {
             break;
         }
         // Handle StarChat "<|end|>" token.
-        else if (embd.back() == starchat_end_token && i >= embd_inp.size()) {
+        else if (embd.back() == starchat_end_token) {
             break;
         }
     }
