@@ -14,8 +14,8 @@ if (NOT CMAKE_BUILD_TYPE)
 endif ()
 
 # third-party libraries
-include_directories(third_party/ggml_new/include/ggml third_party/ggml_new/src)
-add_subdirectory(third_party/ggml_new)
+include_directories(third_party/ggml/include/ggml third_party/ggml/src)
+add_subdirectory(third_party/ggml)
 
 set(SPM_ENABLE_SHARED OFF CACHE BOOL "chatglm: disable sentencepiece shared libraries by default")
 include_directories(third_party/sentencepiece/src)
