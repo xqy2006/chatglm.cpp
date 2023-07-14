@@ -25,11 +25,6 @@ jobs:
       with:
         submodules: true
 
-    - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCHATGLM_ENABLE_TESTING=ON
-      
     - name: Setup Emscripten toolchain
       uses: mymindstorm/setup-emsdk@v12
       
@@ -37,10 +32,11 @@ jobs:
     - name: Build
       # Build your program with the given configuration
       run: |
-        emcc -v
-        #emcmake cmake -B build
-        #cd build
-        #emmake make
+        export CC=${{env.EMSDK}}/upstream/bin/emcc
+        export CXX=${{env.EMSDK}}/upstream/bin/em++
+        emcmake cmake -B build
+        cd build
+        emmake make
     - uses: actions/upload-artifact@v3
       with:
           name: build-${{ runner.os }}
