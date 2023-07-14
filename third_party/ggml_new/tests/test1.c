@@ -4,8 +4,6 @@
 #include <stdlib.h>
 
 int main(int argc, const char ** argv) {
-    const int n_threads = 2;
-
     struct ggml_init_params params = {
         .mem_size   = 128*1024*1024,
         .mem_buffer = NULL,
@@ -37,7 +35,7 @@ int main(int argc, const char ** argv) {
         ggml_graph_reset(&gf);
         ggml_set_f32(f->grad, 1.0f);
 
-        ggml_graph_compute_with_ctx(ctx0, &gb, n_threads);
+        ggml_graph_compute(ctx0, &gb);
 
         printf("f     = %f\n", ggml_get_f32_1d(f, 0));
         printf("df/dx = %f\n", ggml_get_f32_1d(x->grad, 0));
@@ -50,7 +48,7 @@ int main(int argc, const char ** argv) {
         ggml_graph_reset(&gf);
         ggml_set_f32(f->grad, 1.0f);
 
-        ggml_graph_compute_with_ctx(ctx0, &gb, n_threads);
+        ggml_graph_compute(ctx0, &gb);
 
         printf("f     = %f\n", ggml_get_f32_1d(f, 0));
         printf("df/dx = %f\n", ggml_get_f32_1d(x->grad, 0));
@@ -84,7 +82,7 @@ int main(int argc, const char ** argv) {
         ggml_graph_reset(&gf);
         ggml_set_f32(y->grad, 1.0f);
 
-        ggml_graph_compute_with_ctx(ctx0, &gb, n_threads);
+        ggml_graph_compute(ctx0, &gb);
 
         printf("y      = %f\n", ggml_get_f32_1d(y, 0));
         printf("df/dx1 = %f\n", ggml_get_f32_1d(x1->grad, 0));
@@ -103,7 +101,7 @@ int main(int argc, const char ** argv) {
         ggml_set_f32(g1->grad, 1.0f);
         ggml_set_f32(g2->grad, 1.0f);
 
-        ggml_graph_compute_with_ctx(ctx0, &gbb, n_threads);
+        ggml_graph_compute(ctx0, &gbb);
 
         printf("H * [1, 1] = [ %f %f ]\n", ggml_get_f32_1d(x1->grad, 0), ggml_get_f32_1d(x2->grad, 0));
 
@@ -134,7 +132,7 @@ int main(int argc, const char ** argv) {
         ggml_graph_reset(&gf);
         ggml_set_f32(y->grad, 1.0f);
 
-        ggml_graph_compute_with_ctx(ctx0, &gb, n_threads);
+        ggml_graph_compute(ctx0, &gb);
 
         printf("y      = %f\n", ggml_get_f32_1d(y, 0));
         printf("df/dx1 = %f\n", ggml_get_f32_1d(x1->grad, 0));
@@ -171,7 +169,7 @@ int main(int argc, const char ** argv) {
         ggml_graph_reset(&gf);
         ggml_set_f32(y->grad, 1.0f);
 
-        ggml_graph_compute_with_ctx(ctx0, &gb, n_threads);
+        ggml_graph_compute(ctx0, &gb);
 
         printf("y      = %f\n", ggml_get_f32_1d(y, 0));
         printf("df/dx1 = %f\n", ggml_get_f32_1d(x1->grad, 0));
@@ -194,7 +192,7 @@ int main(int argc, const char ** argv) {
         ggml_set_f32(g2->grad, 1.0f);
         ggml_set_f32(g3->grad, 1.0f);
 
-        ggml_graph_compute_with_ctx(ctx0, &gbb, n_threads);
+        ggml_graph_compute(ctx0, &gbb);
 
         printf("H * [1, 1, 1] = [ %f %f %f ]\n",
                 ggml_get_f32_1d(x1->grad, 0),
@@ -229,7 +227,7 @@ int main(int argc, const char ** argv) {
         ggml_graph_reset(&gf);
         ggml_set_f32(y->grad, 1.0f);
 
-        ggml_graph_compute_with_ctx(ctx0, &gb, n_threads);
+        ggml_graph_compute(ctx0, &gb);
 
         printf("y      = %f\n", ggml_get_f32_1d(y, 0));
         printf("df/dx1 = %f %f %f\n",
@@ -282,7 +280,7 @@ int main(int argc, const char ** argv) {
         ggml_graph_reset(&gf);
         ggml_set_f32(y->grad, 1.0f);
 
-        ggml_graph_compute_with_ctx(ctx0, &gb, n_threads);
+        ggml_graph_compute(ctx0, &gb);
 
         printf("y      = %f\n", ggml_get_f32_1d(y, 0));
         printf("df/dx1 = %f %f %f\n",
@@ -335,7 +333,7 @@ int main(int argc, const char ** argv) {
         ggml_graph_reset(&gf);
         ggml_set_f32(y->grad, 1.0f);
 
-        ggml_graph_compute_with_ctx(ctx0, &gb, n_threads);
+        ggml_graph_compute(ctx0, &gb);
 
         printf("y      = %f\n", ggml_get_f32_1d(y, 0));
         printf("df/dx1 = %f %f %f\n",
@@ -382,7 +380,7 @@ int main(int argc, const char ** argv) {
         ggml_graph_reset(&gf);
         ggml_set_f32(y->grad, 1.0f);
 
-        ggml_graph_compute_with_ctx(ctx0, &gb, n_threads);
+        ggml_graph_compute(ctx0, &gb);
 
         printf("y      = %f\n", ggml_get_f32_1d(y, 0));
         printf("df/dx1 = %f %f %f\n",
@@ -408,7 +406,7 @@ int main(int argc, const char ** argv) {
         ggml_graph_reset(&gf);
         ggml_set_f32(y->grad, 1.0f);
 
-        ggml_graph_compute_with_ctx(ctx0, &gb, n_threads);
+        ggml_graph_compute(ctx0, &gb);
 
         printf("y      = %f\n", ggml_get_f32_1d(y, 0));
         printf("df/dx1 = %f %f %f\n",

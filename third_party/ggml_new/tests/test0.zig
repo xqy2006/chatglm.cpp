@@ -1,5 +1,7 @@
 const std = @import("std");
 const c = @cImport({
+    @cInclude("stdio.h");
+    @cInclude("stdlib.h");
     @cInclude("ggml/ggml.h");
 });
 

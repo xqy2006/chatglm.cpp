@@ -46,8 +46,6 @@ int main(int argc, const char ** argv) {
         return 1;
     }
 
-    const int n_threads = 1;
-
     int M = atoi(argv[1]);
     int N = atoi(argv[2]);
     int K = atoi(argv[3]);
@@ -133,14 +131,14 @@ int main(int argc, const char ** argv) {
         dst2 = ggml_mul_mat(ctx0, s0_f32, s1_f32);
 
         struct ggml_cgraph gf = ggml_build_forward(dst2);
-        ggml_graph_compute_with_ctx(ctx0, &gf, n_threads);
+        ggml_graph_compute(ctx0, &gf);
     }
 
     {
         dst3 = ggml_mul_mat(ctx0, s0_f16, s1_f32);
 
         struct ggml_cgraph gf = ggml_build_forward(dst3);
-        ggml_graph_compute_with_ctx(ctx0, &gf, n_threads);
+        ggml_graph_compute(ctx0, &gf);
     }
 
     bool ok_blas = true;

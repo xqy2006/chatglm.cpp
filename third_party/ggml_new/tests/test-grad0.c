@@ -10,10 +10,6 @@
 #pragma warning(disable: 4244 4267) // possible loss of data
 #endif
 
-#if defined(__GNUC__)
-#pragma GCC diagnostic ignored "-Wdouble-promotion"
-#endif
-
 #define MAX_NARGS 3
 
 #undef MIN
@@ -53,7 +49,7 @@ float frand(void) {
 
 int irand(int n) {
     if (n == 0) return 0;
-    return rand()%n;
+    else return rand()%n;
 }
 
 void get_random_dims(int64_t * dims, int ndims) {
@@ -163,14 +159,12 @@ struct ggml_tensor * get_random_tensor_int(
 float get_element(const struct ggml_tensor * t, int idx) {
     if (t->type == GGML_TYPE_F32) {
         return ((float *)t->data)[idx];
-    }
-
-    if (t->type == GGML_TYPE_I32) {
+    } else if (t->type == GGML_TYPE_I32) {
         return ((int32_t *)t->data)[idx];
+    } else {
+        assert(false);
+        return INFINITY;
     }
-
-    assert(false);
-    return INFINITY;
 }
 
 void set_element(struct ggml_tensor * t, int idx, float value) {
@@ -221,14 +215,15 @@ bool check_gradient(
     }
 
     struct ggml_cgraph gf = ggml_build_forward (f);
+    gf.n_threads = n_threads;
+
     struct ggml_cgraph gb = ggml_build_backward(ctx0, &gf, false);
+    gb.n_threads = n_threads;
 
-    ggml_graph_compute_with_ctx(ctx0, &gf, n_threads);
-
+    ggml_graph_compute(ctx0, &gf);
     ggml_graph_reset  (&gf);
     ggml_set_f32      (f->grad, 1.0f);
-
-    ggml_graph_compute_with_ctx(ctx0, &gb, n_threads);
+    ggml_graph_compute(ctx0, &gb);
 
     // ggml_graph_dump_dot(&gf, NULL, "test-grad0-forward.dot");
     // ggml_graph_dump_dot(&gb, &gf,  "test-grad0-backward.dot");
@@ -241,16 +236,15 @@ bool check_gradient(
             const float xm = x0 - eps;
             const float xp = x0 + eps;
             set_element(x[i], k, xp);
-
-            ggml_graph_compute_with_ctx(ctx0, &gf, n_threads);
+            ggml_graph_compute(ctx0, &gf);
 
             const float f0 = ggml_get_f32_1d(f, 0);
 
             set_element(x[i], k, xm);
-
-            ggml_graph_compute_with_ctx(ctx0, &gf, n_threads);
+            ggml_graph_compute(ctx0, &gf);
 
             const float f1 = ggml_get_f32_1d(f, 0);
+
             const float g0 = (f0 - f1)/(2.0f*eps);
 
             set_element(x[i], k, x0);
@@ -258,13 +252,12 @@ bool check_gradient(
             // compute gradient using backward graph
             ggml_graph_reset  (&gf);
             ggml_set_f32      (f->grad, 1.0f);
-
-            ggml_graph_compute_with_ctx(ctx0, &gb, n_threads);
+            ggml_graph_compute(ctx0, &gb);
 
             const float g1 = get_element(x[i]->grad, k);
 
             const float error_abs = fabsf(g0 - g1);
-            const float error_rel = g0 != 0 ? fabsf(g0 - g1)/fabsf(g0) : 0;
+            const float error_rel = g0 != 0 ? fabsf(g0 - g1)/fabs(g0) : 0;
 
             if (error_abs > max_error_abs || error_rel > max_error_rel) {
                 printf("%s: ndims=%d, i=%d, k=%d, x0=%f, xm=%f, xp=%f, f0=%f, f1=%f, g0=%f, g1=%f, eps=%f, error_abs=%f, error_rel=%f\n",
@@ -1146,7 +1139,7 @@ int main(int argc, const char ** argv) {
             int n_rot = ne2[0];
 
             for (int ndims = 3; ndims <= 4; ++ndims) {
-                for (int mode = 0; mode < 4; ++mode) {
+                for (int mode = 0; mode < 8; ++mode) {
                     for (int n_past = 1; n_past < ne2[2]; ++n_past) {
                         x[0] = get_random_tensor(ctx0, ndims, ne2, -1.0f, 1.0f);
 

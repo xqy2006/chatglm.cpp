@@ -90,7 +90,6 @@ else()
         execute_process(COMMAND grep "sse3 " /proc/cpuinfo OUTPUT_VARIABLE SSE3_M)
         if (SSE3_M MATCHES "sse3")
             set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse3")
-	    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msimd128")
         endif()
     elseif (UNAME_S MATCHES "Haiku")
         message(STATUS "Haiku detected")
@@ -261,12 +260,7 @@ if (GGML_CUDA_SOURCES)
     target_link_libraries(ggml PUBLIC stdc++)
 endif()
 
-set (GGML_PUBLIC_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../include/ggml/ggml.h)
-set_target_properties(${TARGET} PROPERTIES
-                      PUBLIC_HEADER "${GGML_PUBLIC_HEADERS}")
-
 install(TARGETS ${TARGET}
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib/static
-    PUBLIC_HEADER DESTINATION include/ggml
     )
