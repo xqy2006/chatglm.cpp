@@ -37,9 +37,10 @@ jobs:
     - name: Build
       # Build your program with the given configuration
       run: |
-        emcmake cmake -B build
-        cd build
-        emmake make
+        emcc -v
+        #emcmake cmake -B build
+        #cd build
+        #emmake make
     - uses: actions/upload-artifact@v3
       with:
           name: build-${{ runner.os }}
