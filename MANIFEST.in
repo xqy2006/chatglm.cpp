@@ -2,8 +2,8 @@ global-include CMakeLists.txt *.cmake README.md LICENSE
 include *.cpp *.h
 
 # ggml
-graft third_party/ggml/include
-graft third_party/ggml/src
+graft third_party/ggml_new/include
+graft third_party/ggml_new/src
 
 # pybind11
 graft third_party/pybind11/include
